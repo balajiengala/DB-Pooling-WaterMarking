@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:os="http://www.mulesoft.org/schema/mule/os" xmlns:db="http://www.mulesoft.org/schema/mule/db"
+	xmlns="http://www.mulesoft.org/schema/mule/core"
+	xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/db http://www.mulesoft.org/schema/mule/db/current/mule-db.xsd
+http://www.mulesoft.org/schema/mule/os http://www.mulesoft.org/schema/mule/os/current/mule-os.xsd">
+	<db:config name="Database_Config" doc:name="Database Config" doc:id="71ad1d44-8485-46e0-8d23-355cf6f9d356" >
+		<db:my-sql-connection host="localhost" port="3306" user="root" password="root" />
+	</db:config>
+	<os:object-store name="Object_store" doc:name="Object store" doc:id="1b54b12d-8db6-4605-b1e3-bd813e29e185" />
+	<flow name="db-pooling-watermarkingFlow" doc:id="a153a0d2-0061-4317-b29a-36ff402f7db4" >
+		<scheduler doc:name="Scheduler" doc:id="b0d8daa2-4faf-4770-b62b-3d4fa36c6470" >
+			<scheduling-strategy >
+				<fixed-frequency frequency="10000"/>
+			</scheduling-strategy>
+		</scheduler>
+		<logger level="INFO" doc:name="Logger" doc:id="981640d7-f704-4d96-acf4-255161387276" message="db-pooling and water- Marking flow had started "/>
+		<os:retrieve doc:name="Retrieve" doc:id="fa882dd1-5ab2-4133-986e-73ebccd77dfd" key="idnum" objectStore="Object_store">
+			<os:default-value ><![CDATA[1]]></os:default-value>
+		</os:retrieve>
+		<set-variable value="#[payload]" doc:name="Set Variable" doc:id="4dc9f3b5-56a9-4fa2-ad4e-ca55fdb9b6a3" variableName="idnum"/>
+		<db:select doc:name="Select" doc:id="a64027ac-e1c6-4363-a85e-d5cadddb20df" config-ref="Database_Config">
+			<db:sql ><![CDATA[select * from egov.students where StudentId > :id]]></db:sql>
+			<db:input-parameters ><![CDATA[#[{
+	"id" : vars.idnum
+}]]]></db:input-parameters>
+		</db:select>
+		<logger level="INFO" doc:name="Logger" doc:id="6cdbf4cd-7b8c-450d-8fe1-c44650e8426f" message="The  Retrived Data from the DB are &amp;&amp;&amp;&amp;&amp;&amp;&amp;&amp;&amp;&amp;&amp;&amp;&amp;&amp;&amp;&amp; StudentId= #[payload.StudentId] and StudentName= #[payload.StudentName]"/>
+		<os:store doc:name="Store" doc:id="29f22af3-48f7-40c0-8726-7058beb6115b" objectStore="Object_store" failOnNullValue="false" key="idnum">
+			<os:value ><![CDATA[#[payload.StudentId[0]]]]></os:value>
+		</os:store>
+	</flow>
+</mule>
